@@ -4,8 +4,8 @@ from config import ARQUIVO_PLAYERS
 
 
 class Player():
-    def __init__(self, username: str, credito_social=0):
-        self.username = username
+    def __init__(self, username: str, credito_social=500):
+        self.username = username.lower()
         self.credito_social = credito_social
         self.campanhas = []
 
@@ -15,6 +15,18 @@ class Player():
             'credito_social': self.credito_social,
             'campanhas': self.campanhas
         }
+    
+    def addCredito(self, credito):
+        if self.credito_social + credito > 1000:
+            self.credito_social = 1000
+        else:
+            self.credito_social += credito
+
+    def rmCredito(self, credito):
+        if self.credito_social - credito < 0:
+            self.credito_social = 0
+        else:
+            self.credito_social -= credito
     
 
 def load_players():

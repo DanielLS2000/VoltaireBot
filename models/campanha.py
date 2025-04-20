@@ -4,13 +4,14 @@ from config import ARQUIVO_CAMPANHAS
 from models.membro_campanha import MembroCampanha
 
 class Campanha():
-    def __init__(self, id: int, displayName: str, game: str, time: str, week_day: str):
+    def __init__(self, id: int, displayName: str, game: str, time: str, week_day: str, organizador: str):
         self.id = id
         self.displayName = displayName
         self.game = game
         self.time = time
         self.week_day = week_day
         self.players = []
+        self.organizador = organizador
 
     def to_dict(self):
         return {
@@ -19,6 +20,7 @@ class Campanha():
             'game': self.game,
             'time': self.time,
             'week_day': self.week_day,
+            'organizador': self.organizador,
             'players': [player.to_dict() for player in self.players if player is not None]
         }
     
@@ -44,7 +46,8 @@ def load_campanhas():
                     displayName=item['displayName'],
                     game=item['game'],
                     time=item['time'],
-                    week_day=item['week_day']
+                    week_day=item['week_day'],
+                    organizador=item['organizador']
                 )
                 lista_players = item.get('players', [])
                 lista_players = [MembroCampanha.create(player) for player in lista_players]

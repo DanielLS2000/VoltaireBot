@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-from utils.utils import salvar_campanhas, salvar_players, hora_valida, has_role, admin_only
+from utils.utils import salvar_campanhas, salvar_players, hora_valida, has_role, admin_only, has_protection
 from models.campanha import campanhas, Campanha
 from models.player import players, Player
 from models.membro_campanha import MembroCampanha
@@ -8,68 +8,92 @@ from chat_interface import GameView, WeekDayView
 from config import *
 
 
-@commands.command(name='criarcampanha')
+@commands.command(name='criarcampanha', aliases=["addCampanha", "newCampanha", "novaCampanha"])
 @has_role()
 async def criar_campanha(ctx):
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
 
-    # 1. Nome da Campanha
-    await ctx.send("📜 Qual o **nome da campanha**?")
-    nome_msg = await ctx.bot.wait_for('message', check=check)
-    display_name = nome_msg.content
+    messages_to_delete = []  # List to store all messages we'll delete later
 
-    # 2. Escolha do Jogo via Select Menu
-    game_view = GameView()
-    await ctx.send("🎮 Selecione o **jogo** da campanha:", view=game_view)
-    await game_view.wait()
-    if not game_view.game:
-        await ctx.send("⛔ Você não escolheu um jogo. Comando cancelado.")
-        return
-    game = game_view.game
+    try:
+        # 1. Nome da Campanha
+        nome_msg = await ctx.send("📜 Qual o **nome da campanha**?")
+        messages_to_delete.append(nome_msg)
+        nome_response = await ctx.bot.wait_for('message', check=check)
+        messages_to_delete.append(nome_response)
+        display_name = nome_response.content
 
-    # 3. Escolha do Dia da Semana via Select Menu
-    week_day_view = WeekDayView()
-    await ctx.send("📆 Selecione o **dia da semana** da campanha:", view=week_day_view)
-    await week_day_view.wait()
-    if not week_day_view.week_day:
-        await ctx.send("⛔ Você não escolheu um dia da semana. Comando cancelado.")
-        return
-    week_day = week_day_view.week_day
+        # 2. Escolha do Jogo via Select Menu
+        game_view = GameView()
+        game_msg = await ctx.send("🎮 Selecione o **jogo** da campanha:", view=game_view)
+        messages_to_delete.append(game_msg)
+        await game_view.wait()
+        if not game_view.game:
+            await ctx.send("⛔ Você não escolheu um jogo. Comando cancelado.")
+            return
+        game = game_view.game
 
-    # 4. Horário com validação (HH:MM)
-    await ctx.send("🕒 Digite o **horário** no formato `HH:MM` (ex: 20:30):")
-    while True:
-        time_msg = await ctx.bot.wait_for('message', check=check)
-        time_input = time_msg.content.strip()
+        # 3. Escolha do Dia da Semana via Select Menu
+        week_day_view = WeekDayView()
+        day_msg = await ctx.send("📆 Selecione o **dia da semana** da campanha:", view=week_day_view)
+        messages_to_delete.append(day_msg)
+        await week_day_view.wait()
+        if not week_day_view.week_day:
+            await ctx.send("⛔ Você não escolheu um dia da semana. Comando cancelado.")
+            return
+        week_day = week_day_view.week_day
 
-        # Regex para validar HH:MM de 00:00 até 23:59
-        if hora_valida(time_input):
-            time = time_input
-            break
-        else:
-            await ctx.send("⛔ Formato inválido! Por favor, use o formato `HH:MM` (ex: 20:30).")
+        # 4. Horário com validação (HH:MM)
+        time_msg = await ctx.send("🕒 Digite o **horário** no formato `HH:MM` (ex: 20:30):")
+        messages_to_delete.append(time_msg)
+        while True:
+            time_response = await ctx.bot.wait_for('message', check=check)
+            messages_to_delete.append(time_response)
+            time_input = time_response.content.strip()
 
-    # Cria o ID da campanha simples
-    campanha_id = len(campanhas) + 1
+            if hora_valida(time_input):
+                time = time_input
+                break
+            else:
+                error_msg = await ctx.send("⛔ Formato inválido! Por favor, use o formato `HH:MM` (ex: 20:30).")
+                messages_to_delete.append(error_msg)
 
-    # Cria e salva a campanha
-    nova_campanha = Campanha(
-        id=campanha_id,
-        displayName=display_name,
-        game=game,
-        time=time,
-        week_day=week_day
-    )
+        # Cria o ID da campanha simples
+        campanha_id = len(campanhas) + 1
 
-    campanhas.append(nova_campanha)
-    salvar_campanhas(campanhas)
+        # Cria e salva a campanha
+        nova_campanha = Campanha(
+            id=campanha_id,
+            displayName=display_name,
+            game=game,
+            time=time,
+            week_day=week_day,
+            organizador=ctx.author.name
+        )
 
-    await ctx.send(f"✅ Campanha **{display_name}** criada com sucesso!\n🎮 Jogo: {game}\n📆 Dia: {week_day}\n🕒 Horário: {time}")
+        campanhas.append(nova_campanha)
+        salvar_campanhas(campanhas)
+
+        # Send final confirmation (we WON'T delete this one)
+        confirmation = await ctx.send(
+            f"✅ Campanha **{display_name}** criada com sucesso!\n"
+            f"🎮 Jogo: {game}\n"
+            f"📆 Dia: {week_day}\n"
+            f"🕒 Horário: {time}"
+        )
+
+    finally:
+        # Delete all intermediate messages
+        for msg in messages_to_delete:
+            try:
+                await msg.delete()
+            except:
+                pass  # Skip if message was already deleted or we lack permissions
 
 
 # Comando para listar as campanhas
-@commands.command(name='listarcampanhas')
+@commands.command(name='listarcampanhas', aliases=["LC", "lc", "listarCampanhas"])
 async def listar_campanhas(ctx):
     if not campanhas:
         await ctx.send("❌ Nenhuma campanha cadastrada.")
@@ -78,13 +102,17 @@ async def listar_campanhas(ctx):
     embed = discord.Embed(title="📜 Lista de Campanhas", color=discord.Color.blue())
 
     for c in campanhas:
-        desc = f"🎮 Jogo: **{c.game}**\n📅 Dia: **{c.week_day.capitalize()}**\n⏰ Horário: **{c.time}**\n👥 Jogadores: **{len(c.players)}**"
+        desc = f"🎮 Jogo: **{c.game}**\n \
+                📅 Dia: **{c.week_day.capitalize()}** \n \
+                ⏰ Horário: **{c.time}**\n \
+                👤Organizador: **{c.organizador}** \n \
+                👥 Jogadores: **{len(c.players)}**"
         embed.add_field(name=f"🔹 {c.displayName} (ID: {c.id})", value=desc, inline=False)
 
     await ctx.send(embed=embed)
 
 
-@commands.command(name='deletarcampanha')
+@commands.command(name='deletarcampanha', aliases=["delCampanha", "deletarCampanha"])
 @has_role()
 async def deletar_campanha(ctx):
     if not campanhas:
@@ -121,7 +149,7 @@ async def deletar_campanha(ctx):
     except TimeoutError:
         await ctx.send("⌛ Tempo esgotado! Tente novamente.")
 
-@commands.command(name='editarcampanha')
+@commands.command(name='editarcampanha', aliases=["editCampanha", "editarCampanha"])
 @has_role()
 async def editar_campanha(ctx):
     if not campanhas:
@@ -229,7 +257,7 @@ async def editar_campanha(ctx):
     except TimeoutError:
         await ctx.send("⌛ Tempo esgotado! Tente novamente.")
 
-@commands.command(name='adicionarplayer')
+@commands.command(name='adicionarplayer', aliases=["addPlayer"])
 @has_role()
 async def adicionar_player(ctx):
     if not campanhas:
@@ -277,8 +305,8 @@ async def adicionar_player(ctx):
             await ctx.send(f"✅ Jogador **{username}** foi registrado no sistema.")
 
         # Verifica se já está na campanha
-        campanha_players = [p['user'] for p in campanha.players]
-        ja_participa = any(mc.user == username for mc in campanha_players)
+        campanha_players = [p.user for p in campanha.players]
+        ja_participa = username in campanha_players
         if ja_participa:
             await ctx.send(f"⚠️ O jogador **{username}** já está participando dessa campanha.")
             return
@@ -303,7 +331,74 @@ async def adicionar_player(ctx):
     except TimeoutError:
         await ctx.send("⌛ Tempo esgotado! Tente novamente.")
 
-@commands.command(name="analisar_campanha")
+@commands.command(name="removerPlayer", aliases=["remover_player", "removePlayer", "rmPlayer"])
+@admin_only()
+async def remover_player(ctx):
+    if not campanhas:
+        await ctx.send("❌ Não há campanhas cadastradas para adicionar players.")
+        return
+
+    # Lista as campanhas disponíveis
+    resposta = "**📜 Lista de Campanhas:**\n"
+    for campanha in campanhas:
+        resposta += f"🆔 {campanha.id}: {campanha.displayName} ({campanha.game})\n"
+
+    resposta += "\nDigite o **ID** da campanha para adicionar um player:"
+    await ctx.send(resposta)
+
+    # Espera a resposta do ID
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+
+    try:
+        msg_id = await ctx.bot.wait_for('message', check=check, timeout=60.0)
+        campanha_id = int(msg_id.content)
+
+        campanha = next((c for c in campanhas if c.id == campanha_id), None)
+
+        if not campanha:
+            await ctx.send("⚠️ Campanha com esse ID não foi encontrada.")
+            return
+
+        # Pergunta quem é o player (mencionando o user)
+        await ctx.send("Mencione o usuário que deseja adicionar à campanha:")
+        msg_user = await ctx.bot.wait_for('message', check=check, timeout=60.0)
+
+        if not msg_user.mentions:
+            await ctx.send("❌ Você precisa mencionar um usuário!")
+            return
+
+        member = msg_user.mentions[0]
+        username = member.name
+
+        # Verifica se o player já existe
+        player = next((p for p in players if p.username == username), None)
+        if not player:
+            await ctx.send(f"Jogador **{username}** não está registrado no sistema.")
+
+        # Verifica se já está na campanha
+        campanha_players = [p.user for p in campanha.players]
+        ja_participa = username in campanha_players
+        if not ja_participa:
+            await ctx.send(f"⚠️ O jogador **{username}** não participa da campanha.")
+            return
+
+        # Remove a campanha do player
+        player.campanhas = [campanha_id for campanha_id in player.campanhas if campanha_id != campanha.id]
+        # Remove o player da campanha
+        campanha.players = [player for player in campanha.players if player.user != username]
+
+        salvar_campanhas(campanhas)
+        salvar_players(players)
+
+        await ctx.send(f"✅ O jogador **{username}** foi removido da campanha **{campanha.displayName}**!")
+
+    except ValueError:
+        await ctx.send("❌ ID inválido. Digite um número válido.")
+    except TimeoutError:
+        await ctx.send("⌛ Tempo esgotado! Tente novamente.")
+
+@commands.command(name="analisar_campanha", aliases=["AC", "ac", "analise", "detalharCampanha", "analisarCampanha"])
 async def analisar_campanha(ctx):
     if not campanhas:
         await ctx.send("❌ Não há campanhas disponíveis.")
@@ -344,9 +439,9 @@ async def analisar_campanha(ctx):
         else:
             detalhes += "**👥 Jogadores:**\n"
             for membro in campanha.players:
-                membro = MembroCampanha.create(membro)
-                presencas = len(membro.presenca)  # Conta quantas presenças ele teve
-                detalhes += f"- 👤 **{membro.country}** | **{membro.user}** | 📌 Presenças: {presencas}\n"
+                protecao = "Sim" if has_protection(membro.presenca) else "Não"
+                presencas = sum([p for p in membro.presenca if p == 1])
+                detalhes += f"- 👤 **{membro.country}** | **{membro.user}** | 📌 Presenças: {presencas} | Proteção: {protecao}\n"
 
         await ctx.send(detalhes)
 

@@ -1,12 +1,25 @@
 [
     {
         "username": "flame2000",
-        "credito_social": 0,
+        "credito_social": 1000,
         "campanhas": [
-            1,
-            1,
+            2,
             3,
-            2
+            1
+        ]
+    },
+    {
+        "username": "carolusrex1718",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "carl-bot",
+        "credito_social": 500,
+        "campanhas": [
+            1
         ]
     }
 ]
