@@ -1,14 +1,5 @@
 [
     {
-        "username": "flame2000",
-        "credito_social": 1000,
-        "campanhas": [
-            2,
-            3,
-            1
-        ]
-    },
-    {
         "username": "carolusrex1718",
         "credito_social": 500,
         "campanhas": [
@@ -16,7 +7,70 @@
         ]
     },
     {
-        "username": "carl-bot",
+        "username": "flame2000",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "gpret_",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "tazuros",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "pedroid",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "batlango2.0",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "setmask",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "finger0305",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "alexandre_finger",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "generalscrapmud",
+        "credito_social": 500,
+        "campanhas": [
+            1
+        ]
+    },
+    {
+        "username": "gafarba",
         "credito_social": 500,
         "campanhas": [
             1

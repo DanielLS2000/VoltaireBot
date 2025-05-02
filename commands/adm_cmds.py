@@ -1,7 +1,7 @@
 from discord.ext import commands
 from models.campanha import campanhas
 from models.player import players
-from utils.utils import gerar_embed_campanhas, has_role, salvar_campanhas, salvar_players, admin_only
+from utils.utils import gerar_info, has_role, salvar_campanhas, salvar_players, admin_only
 import json
 import asyncio
 
@@ -9,17 +9,19 @@ import asyncio
 async def atualizar_info_jogos(ctx, campanhas):
     canal = ctx.channel
     mensagens = [msg async for msg in canal.history(limit=10)]
+    
+    # Busca uma mensagem antiga do bot (agora com content, não mais embed)
     mensagem_antiga = next(
-        (msg for msg in mensagens if msg.author == ctx.bot.user and msg.embeds), None
+        (msg for msg in mensagens if msg.author == ctx.bot.user and not msg.embeds), None
     )
 
-    embed = gerar_embed_campanhas(campanhas, ctx.guild)
+    conteudo = gerar_info(campanhas, ctx.guild)
 
     if mensagem_antiga:
-        await mensagem_antiga.edit(embed=embed)
+        await mensagem_antiga.edit(content=conteudo)
         confirm = await canal.send("✅ Mensagem de campanhas **atualizada**.")
     else:
-        await canal.send(embed=embed)
+        await canal.send(content=conteudo)
         confirm = await canal.send("✅ Mensagem de campanhas **enviada**.")
 
     await asyncio.sleep(5)

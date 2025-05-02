@@ -36,37 +36,35 @@ def has_protection(presenca):
     else:
         return False
 
-def gerar_embed_campanhas(campanhas, guild):
-    embed = discord.Embed(
-        title="📋 Campanhas Ativas",
-        description="Aqui estão todas as campanhas em andamento.",
-        color=discord.Color.blurple()
-    )
-
+def gerar_info(campanhas, guild):
     if not campanhas:
-        embed.description = "🚫 **Nenhuma campanha ativa no momento.**"
-    else:
-        for campanha in campanhas:
-            organizador = campanha.organizador or "Desconhecido"
-            membro_org = discord.utils.get(guild.members, name=organizador)
-            mention_org = membro_org.mention if membro_org else organizador
+        return "🚫 **Nenhuma campanha ativa no momento.**"
 
-            players_info = ""
+    mensagem = ""
+    for campanha in campanhas:
+        organizador = campanha.organizador or "Desconhecido"
+        membro_org = discord.utils.get(guild.members, name=organizador)
+        mention_org = membro_org.mention if membro_org else f"@{organizador}"
+
+        mensagem += f"## {campanha.displayName}, todos os {campanha.week_day.capitalize()}s às {campanha.time}\n"
+        mensagem += f"Organizador: {mention_org}\n\n"
+
+        if campanha.players:
+            mensagem += f"{len(campanha.players)} Players:\n"
             for membro in campanha.players:
                 if membro:
                     membro_discord = discord.utils.get(guild.members, name=membro.user)
                     mention = membro_discord.mention if membro_discord else f"@{membro.user}"
-                    players_info += f"{mention} - {membro.country}\n"
+                    country = membro.country or "Sem país definido"
+                    mensagem += f"{mention} - {country}\n"
                 else:
-                    players_info += "N/A\n"
+                    mensagem += "N/A\n"
+        else:
+            mensagem += "Nenhum jogador registrado ainda.\n"
 
-            embed.add_field(
-                name=f"{campanha.displayName} ({campanha.week_day} às {campanha.time})",
-                value=f"**Organizador:** {mention_org}\n**{len(campanha.players)} Players:**\n{players_info}",
-                inline=False
-            )
+        mensagem += "\n"
 
-    return embed
+    return mensagem
 
 def can_pick_country(player_credit, country_tag):
     for tier, countries in eu4_tiers.items():

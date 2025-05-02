@@ -1,0 +1,78 @@
+[
+    {
+        "id": 1,
+        "displayName": "URP(Ultra Role Play)",
+        "game": "EU4",
+        "time": "14:00",
+        "week_day": "Sabado",
+        "organizador": "carolusrex1718",
+        "players": [
+            {
+                "campanha_id": 1,
+                "user": "carolusrex1718",
+                "country": "Austria",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "flame2000",
+                "country": "Castela",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "gpret_",
+                "country": "Muscovy",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "tazuros",
+                "country": "Genova",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "pedroid",
+                "country": "Inglaterra",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "batlango2.0",
+                "country": "Portugal",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "setmask",
+                "country": "França",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "finger0305",
+                "country": "Brandemburgo ( Random North German )",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "alexandre_finger",
+                "country": "Otomanos",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "generalscrapmud",
+                "country": "Napoles",
+                "presenca": []
+            },
+            {
+                "campanha_id": 1,
+                "user": "gafarba",
+                "country": "Mamelucos",
+                "presenca": []
+            }
+        ]
+    }
+]
